@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Achievement Pyramid | Ant X</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   BASE
+═══════════════════════════════════════ */
+:root {
+  --black:  #080808;
+  --dark:   #121212;
+  --card:   #1a1a1a;
+  --card2:  #222;
+  --border: #2c2c2c;
+  --gold:   #c9a84c;
+  --goldL:  #e8c97a;
+  --goldD:  #7a6228;
+  --white:  #f5f0e8;
+  --off:    #a09888;
+  --muted:  #555;
+  --green:  #2ecc71;
+  --radius: 3px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  background:var(--black);
+  color:var(--white);
+  font-family:'Josefin Sans',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── SCREENS ── */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* ═══════════════════════════════════════
+   WELCOME SCREEN
+═══════════════════════════════════════ */
+#screen-welcome{
+  min-height:100vh;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:40px 24px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+#screen-welcome.active{display:flex;}
+
+#screen-welcome::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,168,76,0.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+.w-logo{
+  font-size:10px;
+  letter-spacing:.4em;
+  color:var(--goldD);
+  text-transform:uppercase;
+  margin-bottom:40px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.w-logo::before,.w-logo::after{
+  content:'';width:32px;height:1px;background:var(--goldD);
+}
+
+.w-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(36px,8vw,68px);
+  font-weight:700;
+  line-height:1.05;
+  margin-bottom:8px;
+}
+.w-title span{color:var(--gold);}
+
+.w-sub{
+  font-size:clamp(13px,3vw,16px);
+  color:var(--off);
+  letter-spacing:.1em;
+  margin-bottom:48px;
+}
+
+.w-desc{
+  max-width:480px;
+  font-size:13px;
+  color:var(--off);
+  line-height:1.9;
+  margin-bottom:56px;
+}
+
+.w-steps{
+  display:flex;
+  gap:0;
+  margin-bottom:56px;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:500px;
+}
+.w-step{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:10px;
+  letter-spacing:.1em;
+  color:var(--off);
+  padding:8px 12px;
+}
+.w-step-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  color:var(--gold);
+  font-weight:700;
+}
+.w-step-sep{
+  color:var(--border);
+  font-size:16px;
+}
+
+.btn-start{
+  background:var(--gold);
+  color:var(--black);
+  border:none;
+  font-family:'Josefin Sans',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  padding:18px 56px;
+  cursor:pointer;
+  border-radius:var(--radius);
+  transition:all .2s;
+  margin-bottom:24px;
+}
+.btn-start:hover{
+  background:var(--goldL);
+  box-shadow:0 0 32px rgba(201,168,76,.35);
+  transform:translateY(-1px);
+}
+
+.w-note{
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:.1em;
+}
+
+/* ═══════════════════════════════════════
+   APP SHELL (steps)
+═══════════════════════════════════════ */
+#screen-app{
+  min-height:100vh;
+  display:none;
+  flex-direction:column;
+}
+#screen-app.active{display:flex;}
+
+/* top bar */
+.app-topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,8,.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.app-brand{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;
+  font-weight:700;
+  color:var(--gold);
+  white-space:nowrap;
+}
+
+.progress-track{
+  flex:1;
+  height:2px;
+  background:var(--border);
+  border-radius:1px;
+  overflow:hidden;
+  max-width:320px;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--goldD),var(--gold));
+  border-radius:1px;
+  transition:width .5s ease;
+}
+
+.step-counter{
+  font-size:10px;
+  letter-spacing:.15em;
+  color:var(--muted);
+  white-space:nowrap;
+}
+
+/* step nav dots */
+.step-dots{
+  display:flex;
+  gap:6px;
+  padding:0 20px 0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.step-dots::-webkit-scrollbar{display:none;}
+
+.step-dot-btn{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:10px 6px;
+  min-width:52px;
+  opacity:.4;
+  transition:opacity .2s;
+}
+.step-dot-btn.active{opacity:1;}
+.step-dot-btn.done{opacity:.7;}
+
+.sdot{
+  width:28px;height:28px;
+  border-radius:50%;
+  border:1px solid var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;
+  color:var(--muted);
+  transition:all .3s;
+}
+.step-dot-btn.active .sdot{
+  border-color:var(--gold);
+  color:var(--gold);
+  background:#1a1500;
+  box-shadow:0 0 10px rgba(201,168,76,.3);
+}
+.step-dot-btn.done .sdot{
+  border-color:var(--goldD);
+  color:var(--goldD);
+  background:#111000;
+}
+.sdot-label{
+  font-size:8px;
+  color:var(--muted);
+  letter-spacing:.05em;
+  text-align:center;
+  line-height:1.2;
+}
+.step-dot-btn.active .sdot-label{color:var(--gold);}
+
+/* content area */
+.app-content{
+  flex:1;
+  padding:0 0 100px;
+}
+
+/* ═══════════════════════════════════════
+   STEP PANELS
+═══════════════════════════════════════ */
+.step-panel{display:none;}
+.step-panel.active{display:block;animation:fadeUp .4s ease both;}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.step-header{
+  padding:32px 20px 24px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:24px;
+}
+.step-tag{
+  font-size:9px;letter-spacing:.35em;
+  color:var(--goldD);text-transform:uppercase;
+  margin-bottom:10px;
+}
+.step-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(28px,6vw,42px);
+  font-weight:700;line-height:1.1;
+  margin-bottom:10px;
+}
+.step-title em{color:var(--gold);font-style:normal;}
+.step-desc{
+  font-size:12px;color:var(--off);
+  line-height:1.8;max-width:480px;
+}
+
+/* section */
+.sec{
+  margin:0 20px 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-top:2px solid var(--goldD);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.sec-title{
+  font-size:9px;letter-spacing:.25em;
+  color:var(--gold);text-transform:uppercase;
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--border);
+  background:var(--card2);
+}
+.sec-body{padding:18px;}
+
+/* fields */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+label{
+  display:block;
+  font-size:9px;letter-spacing:.2em;
+  color:var(--off);text-transform:uppercase;
+  margin-bottom:7px;
+}
+input[type=text],textarea,select{
+  width:100%;
+  background:#111;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--white);
+  font-family:'Josefin Sans',sans-serif;
+  font-size:14px;
+  padding:12px 14px;
+  outline:none;
+  transition:border-color .2s;
+  resize:vertical;
+  -webkit-appearance:none;
+}
+input[type=text]:focus,textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(201,168,76,.1);
+}
+textarea{min-height:80px;}
+
+/* pillars */
+.pillar-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.pillar-card{
+  background:#111;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 10px;
+  text-align:center;
+}
+.pillar-icon{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:700;
+  color:var(--gold);
+  display:block;margin-bottom:10px;
+}
+.pillar-card textarea{
+  font-size:12px;min-height:70px;
+  text-align:left;
+}
+
+/* needs sliders */
+.needs-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+.need-item{text-align:center;}
+.need-name{
+  font-size:9px;color:var(--off);
+  letter-spacing:.05em;
+  display:block;margin-bottom:6px;
+}
+.need-score{
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;font-weight:700;
+  color:var(--gold);
+  display:block;margin-bottom:6px;
+}
+input[type=range]{
+  width:100%;-webkit-appearance:none;
+  height:3px;background:var(--border);
+  border-radius:2px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:18px;height:18px;
+  border-radius:50%;
+  background:var(--gold);
+  cursor:pointer;
+  border:2px solid var(--black);
+  box-shadow:0 0 8px rgba(201,168,76,.4);
+}
+
+/* role rows */
+.role-row{
+  display:grid;
+  grid-template-columns:1fr 1.5fr;
+  gap:10px;
+  margin-bottom:10px;
+}
+.role-row:last-child{margin-bottom:0;}
+
+/* habit list */
+.habit-list{list-style:none;}
+.habit-item{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+}
+.habit-item:last-child{border-bottom:none;}
+.habit-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;color:var(--gold);
+  width:22px;flex-shrink:0;text-align:right;
+}
+.habit-item input{
+  flex:1;background:transparent;
+  border:none;border-bottom:1px solid var(--border);
+  border-radius:0;padding:4px 0;
+  font-size:13px;color:var(--white);
+}
+.habit-item input:focus{
+  outline:none;border-bottom-color:var(--gold);
+  box-shadow:none;
+}
+
+/* phase rows */
+.phase-row{
+  display:grid;
+  grid-template-columns:80px 1fr;
+  gap:10px;
+  margin-bottom:10px;
+}
+.phase-row:last-child{margin-bottom:0;}
+
+/* ── BOTTOM NAV ── */
+.btn-row{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(8,8,8,.96);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;gap:12px;
+  z-index:200;
+}
+.btn{
+  font-family:'Josefin Sans',sans-serif;
+  font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;
+  padding:14px 24px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all .2s;
+  border:none;
+  flex:1;
+}
+.btn-back{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--off);
+  flex:0 0 auto;
+  padding:14px 20px;
+}
+.btn-back:hover{border-color:var(--off);color:var(--white);}
+.btn-next{
+  background:var(--gold);
+  color:var(--black);
+  font-weight:700;
+}
+.btn-next:hover{
+  background:var(--goldL);
+  box-shadow:0 0 20px rgba(201,168,76,.3);
+}
+.btn-finish{
+  background:var(--gold);
+  color:var(--black);
+  font-weight:700;
+}
+
+/* ═══════════════════════════════════════
+   SUMMARY SCREEN
+═══════════════════════════════════════ */
+#screen-summary{
+  display:none;
+  min-height:100vh;
+}
+#screen-summary.active{display:block;}
+
+/* print toolbar */
+.print-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,8,.96);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;gap:12px;align-items:center;
+}
+.btn-edit{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--off);
+  font-family:'Josefin Sans',sans-serif;
+  font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;
+  padding:10px 18px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all .2s;
+}
+.btn-edit:hover{border-color:var(--off);color:var(--white);}
+.btn-pdf{
+  background:var(--gold);
+  color:var(--black);
+  border:none;
+  font-family:'Josefin Sans',sans-serif;
+  font-size:10px;letter-spacing:.2em;font-weight:700;
+  text-transform:uppercase;
+  padding:10px 20px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:all .2s;
+  margin-left:auto;
+}
+.btn-pdf:hover{background:var(--goldL);}
+
+/* ── SUMMARY CONTENT ── */
+.summary-wrap{
+  max-width:800px;
+  margin:0 auto;
+  padding:32px 20px 80px;
+}
+
+.s-header{
+  text-align:center;
+  padding:40px 0 36px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:32px;
+}
+.s-tag{
+  font-size:9px;letter-spacing:.4em;
+  color:var(--goldD);text-transform:uppercase;
+  margin-bottom:16px;
+}
+.s-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(32px,7vw,56px);
+  font-weight:700;color:var(--white);
+  margin-bottom:6px;
+}
+.s-role-text{
+  font-size:11px;letter-spacing:.2em;
+  color:var(--gold);margin-bottom:20px;
+}
+.s-gold-line{
+  width:40px;height:2px;
+  background:var(--gold);
+  margin:0 auto 20px;
+}
+.s-purpose{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(13px,2.5vw,16px);
+  font-style:italic;color:var(--off);
+  line-height:1.8;max-width:560px;margin:0 auto;
+}
+
+/* grid */
+.s-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+.s-full{grid-column:1/-1;}
+
+.s-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-top:2px solid var(--goldD);
+  border-radius:var(--radius);
+  padding:20px;
+  break-inside:avoid;
+}
+.s-card.highlight{border-top-color:var(--gold);}
+
+.s-card-title{
+  font-size:8px;letter-spacing:.3em;
+  color:var(--gold);text-transform:uppercase;
+  margin-bottom:14px;
+}
+
+/* pillars in summary */
+.s-pillar{
+  display:flex;align-items:flex-start;
+  gap:12px;margin-bottom:10px;
+}
+.s-pillar:last-child{margin-bottom:0;}
+.s-pillar-icon{
+  width:32px;height:32px;
+  background:var(--gold);
+  border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px;font-weight:700;
+  color:var(--black);flex-shrink:0;
+}
+.s-pillar-text{
+  font-size:11px;color:var(--off);
+  line-height:1.6;padding-top:4px;
+}
+
+/* needs bars */
+.s-bar-row{
+  display:flex;align-items:center;
+  gap:10px;margin-bottom:7px;
+}
+.s-bar-row:last-child{margin-bottom:0;}
+.s-bar-label{
+  font-size:9px;color:var(--off);
+  width:52px;flex-shrink:0;letter-spacing:.05em;
+}
+.s-bar-track{
+  flex:1;height:3px;
+  background:var(--border);border-radius:2px;overflow:hidden;
+}
+.s-bar-fill{
+  height:100%;background:var(--gold);
+  border-radius:2px;
+}
+.s-bar-score{
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px;font-weight:700;
+  color:var(--gold);width:14px;text-align:right;
+}
+.s-needs-note{
+  font-size:9px;color:var(--gold);
+  font-style:italic;margin-top:10px;
+  letter-spacing:.05em;
+}
+
+/* roles */
+.s-role{
+  display:flex;gap:10px;
+  margin-bottom:10px;align-items:flex-start;
+}
+.s-role:last-child{margin-bottom:0;}
+.s-role-bar{
+  width:3px;background:var(--gold);
+  border-radius:2px;flex-shrink:0;align-self:stretch;min-height:16px;
+}
+.s-role-title{
+  font-size:11px;font-weight:700;
+  color:var(--gold);letter-spacing:.08em;
+  margin-bottom:2px;
+}
+.s-role-desc{font-size:11px;color:var(--off);line-height:1.5;}
+
+/* goal */
+.s-goal-box{
+  background:#111;
+  border:1px solid var(--border);
+  border-left:3px solid var(--gold);
+  padding:14px 16px;
+  border-radius:0 var(--radius) var(--radius) 0;
+  margin-bottom:12px;
+}
+.s-goal-date{
+  font-size:8px;letter-spacing:.2em;
+  color:var(--gold);text-transform:uppercase;
+  margin-bottom:6px;
+}
+.s-goal-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(14px,2.5vw,18px);
+  font-weight:600;color:var(--white);
+  line-height:1.5;
+}
+
+/* phase */
+.s-phase{
+  display:flex;gap:8px;
+  padding:5px 0;
+  border-bottom:1px solid var(--border);
+  font-size:11px;color:var(--off);
+}
+.s-phase:last-child{border-bottom:none;}
+.s-phase-label{color:var(--gold);flex-shrink:0;font-weight:600;}
+
+/* careers / strengths */
+.s-item{
+  display:flex;gap:8px;
+  padding:5px 0;
+  border-bottom:1px solid var(--border);
+  font-size:11px;color:var(--off);
+}
+.s-item:last-child{border-bottom:none;}
+.s-item-dot{color:var(--gold);}
+
+/* habits */
+.s-habits-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 24px;
+}
+.s-habit{
+  display:flex;gap:8px;
+  padding:5px 0;
+  border-bottom:1px solid var(--border);
+  font-size:11px;color:var(--off);
+}
+.s-habit:last-child{border-bottom:none;}
+.s-habit-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;color:var(--gold);
+  flex-shrink:0;
+}
+
+/* declaration */
+.s-declaration{
+  background:#0d0d0d;
+  border:1px solid var(--border);
+  border-top:2px solid var(--gold);
+  border-bottom:2px solid var(--gold);
+  padding:32px 24px;
+  text-align:center;
+  margin:24px 0 0;
+  border-radius:var(--radius);
+}
+.s-decl-label{
+  font-size:8px;letter-spacing:.3em;
+  color:var(--goldD);text-transform:uppercase;
+  margin-bottom:16px;
+}
+.s-decl-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(14px,2.5vw,18px);
+  font-style:italic;color:var(--white);
+  line-height:1.9;
+}
+
+/* ═══════════════════════════════════════
+   PRINT STYLES
+═══════════════════════════════════════ */
+@media print{
+  body{background:#fff;color:#111;}
+  .print-bar,.app-topbar,.btn-row{display:none!important;}
+  #screen-summary{display:block!important;}
+  #screen-welcome,#screen-app{display:none!important;}
+  .s-card{
+    background:#fff;
+    border:1px solid #ddd;
+    border-top:2px solid #c9a84c;
+    page-break-inside:avoid;
+  }
+  .s-card-title,.s-role-title,.s-goal-date,
+  .s-decl-label,.s-bar-score,.s-pillar-icon,
+  .s-needs-note,.s-habit-num,.s-item-dot,
+  .s-phase-label,.s-bar-fill,.s-role-bar{
+    color:#8a6228!important;
+    background:#f5e8c0!important;
+  }
+  .s-declaration{background:#fafafa;border-color:#c9a84c;}
+  .s-name,.s-goal-text,.s-decl-text,.s-purpose{color:#111;}
+  .s-role-text,.s-pillar-text,.s-role-desc,
+  .s-phase,.s-item,.s-habit,.s-bar-label{color:#555;}
+  .s-bar-track{background:#eee;}
+  .s-gold-line{background:#c9a84c;}
+  .summary-wrap{padding:16px;}
+  .s-grid{gap:10px;}
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:540px){
+  .pillar-grid{grid-template-columns:1fr;}
+  .needs-grid{grid-template-columns:repeat(3,1fr);}
+  .role-row{grid-template-columns:1fr;}
+  .phase-row{grid-template-columns:70px 1fr;}
+  .s-grid{grid-template-columns:1fr;}
+  .s-habits-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     WELCOME
+═══════════════════════════════════════ -->
+<div id="screen-welcome" class="screen active">
+  <div class="w-logo">Ant X</div>
+
+  <h1 class="w-title">Achievement<br><span>Pyramid</span></h1>
+  <p class="w-sub">戦略的人生経営ツール</p>
+
+  <p class="w-desc">
+    自分の理念・ビジョン・目標・計画・日々の実践を<br>
+    体系化し、ワンページにまとめるためのツールです。<br>
+    所要時間：約20〜30分
+  </p>
+
+  <div class="w-steps">
+    <div class="w-step"><span class="w-step-num">1</span> 人生理念</div>
+    <div class="w-step-sep">›</div>
+    <div class="w-step"><span class="w-step-num">2</span> ビジョン</div>
+    <div class="w-step-sep">›</div>
+    <div class="w-step"><span class="w-step-num">3</span> 目標</div>
+    <div class="w-step-sep">›</div>
+    <div class="w-step"><span class="w-step-num">4</span> 計画</div>
+    <div class="w-step-sep">›</div>
+    <div class="w-step"><span class="w-step-num">5</span> 実践</div>
+  </div>
+
+  <button class="btn-start" onclick="startApp()">はじめる</button>
+  <p class="w-note">入力内容はこのデバイスに自動保存されます</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP (STEPS 1–5)
+═══════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <div class="app-topbar">
+    <div class="app-brand">Ant X Pyramid</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="step-counter" id="stepCounter">1 / 5</div>
+  </div>
+
+  <div class="step-dots" id="stepDots"></div>
+
+  <div class="app-content">
+
+    <!-- STEP 1: 人生理念 -->
+    <div class="step-panel active" data-step="1">
+      <div class="step-header">
+        <div class="step-tag">Step 1 of 5</div>
+        <h2 class="step-title">人生<em>理念</em></h2>
+        <p class="step-desc">すべての行動の土台となる価値観・哲学を言語化します。あなたの「なぜ」を言葉にしてください。</p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">基本情報</div>
+        <div class="sec-body">
+          <div class="field">
+            <label>氏名</label>
+            <input type="text" id="f-name" placeholder="例：山田 太郎">
+          </div>
+          <div class="field">
+            <label>肩書き・役職</label>
+            <input type="text" id="f-jobRole" placeholder="例：〇〇株式会社 CEO">
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">人生理念の三本柱</div>
+        <div class="sec-body">
+          <div class="pillar-grid">
+            <div class="pillar-card">
+              <span class="pillar-icon">第一</span>
+              <div class="field" style="margin:0">
+                <label>第一の柱</label>
+                <textarea id="f-pillar1" placeholder="例：自分を愛し、隣人を愛する人生を全うする"></textarea>
+              </div>
+            </div>
+            <div class="pillar-card">
+              <span class="pillar-icon">第二</span>
+              <div class="field" style="margin:0">
+                <label>第二の柱</label>
+                <textarea id="f-pillar2" placeholder="例：考え方とやり方次第でできることを伝える"></textarea>
+              </div>
+            </div>
+            <div class="pillar-card">
+              <span class="pillar-icon">第三</span>
+              <div class="field" style="margin:0">
+                <label>第三の柱</label>
+                <textarea id="f-pillar3" placeholder="例：死ぬまで昨日の自分を超え続ける"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">成功しなければならない理由</div>
+        <div class="sec-body">
+          <div class="field">
+            <label>理由 1</label>
+            <input type="text" id="f-reason1" placeholder="例：縁ある人達の物心両面の幸せを実践するため">
+          </div>
+          <div class="field">
+            <label>理由 2</label>
+            <input type="text" id="f-reason2" placeholder="例：富を分け与えるため">
+          </div>
+          <div class="field">
+            <label>理由 3</label>
+            <input type="text" id="f-reason3" placeholder="例：自分の願望を実現するため">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: ビジョン -->
+    <div class="step-panel" data-step="2">
+      <div class="step-header">
+        <div class="step-tag">Step 2 of 5</div>
+        <h2 class="step-title">人生<em>ビジョン</em></h2>
+        <p class="step-desc">将来あるべき理想の姿と、あなたが人生で最も大切にしたいものを明らかにします。</p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">5つの基本的欲求バランス（1〜5で評価）</div>
+        <div class="sec-body">
+          <div class="needs-grid">
+            <div class="need-item">
+              <span class="need-name">生存</span>
+              <span class="need-score" id="sc-survival">3</span>
+              <input type="range" min="1" max="5" value="3" oninput="updateNeed('survival',this.value)">
+            </div>
+            <div class="need-item">
+              <span class="need-name">愛・所属</span>
+              <span class="need-score" id="sc-love">3</span>
+              <input type="range" min="1" max="5" value="3" oninput="updateNeed('love',this.value)">
+            </div>
+            <div class="need-item">
+              <span class="need-name">力・承認</span>
+              <span class="need-score" id="sc-power">3</span>
+              <input type="range" min="1" max="5" value="3" oninput="updateNeed('power',this.value)">
+            </div>
+            <div class="need-item">
+              <span class="need-name">自由</span>
+              <span class="need-score" id="sc-freedom">3</span>
+              <input type="range" min="1" max="5" value="3" oninput="updateNeed('freedom',this.value)">
+            </div>
+            <div class="need-item">
+              <span class="need-name">楽しみ</span>
+              <span class="need-score" id="sc-fun">3</span>
+              <input type="range" min="1" max="5" value="3" oninput="updateNeed('fun',this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">人生の目的</div>
+        <div class="sec-body">
+          <div class="field" style="margin:0">
+            <textarea id="f-lifePurpose" rows="4" placeholder="例：縁ある全ての人に、考え方とやり方次第でできる、という希望を伝え実践する人生を送る。"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">将来ビジョン</div>
+        <div class="sec-body">
+          <div class="field" style="margin:0">
+            <textarea id="f-vision" rows="4" placeholder="例：10年後に自分が実現したい状態・あり方を具体的に記述してください。"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: 目標設定 -->
+    <div class="step-panel" data-step="3">
+      <div class="step-header">
+        <div class="step-tag">Step 3 of 5</div>
+        <h2 class="step-title">目標<em>設定</em></h2>
+        <p class="step-desc">役割ごとの目標と、具体的な数値目標・達成期限を設定します。</p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">私の役割（最大3つ）</div>
+        <div class="sec-body">
+          <div class="role-row">
+            <div class="field" style="margin:0"><label>役割 1</label><input type="text" id="f-r1t" placeholder="例：家族"></div>
+            <div class="field" style="margin:0"><label>その役割でやること</label><input type="text" id="f-r1d" placeholder="例：子供に生き様で希望を伝える"></div>
+          </div>
+          <div class="role-row">
+            <div class="field" style="margin:0"><label>役割 2</label><input type="text" id="f-r2t" placeholder="例：CEO"></div>
+            <div class="field" style="margin:0"><label>その役割でやること</label><input type="text" id="f-r2d" placeholder="例：会社を〇〇億円規模に成長させる"></div>
+          </div>
+          <div class="role-row">
+            <div class="field" style="margin:0"><label>役割 3</label><input type="text" id="f-r3t" placeholder="例：コミュニティリーダー"></div>
+            <div class="field" style="margin:0"><label>その役割でやること</label><input type="text" id="f-r3d" placeholder="例：縁ある人が挑戦できる場を作る"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">最重要数値目標</div>
+        <div class="sec-body">
+          <div class="field">
+            <label>達成期限</label>
+            <input type="text" id="f-goalDate" placeholder="例：2035年3月31日">
+          </div>
+          <div class="field" style="margin:0">
+            <label>目標内容（数値で）</label>
+            <textarea id="f-goalContent" rows="4" placeholder="例：売上〇〇億円達成、〇〇を実現する。"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">フェーズ設計（Phase 1〜4）</div>
+        <div class="sec-body">
+          <div class="phase-row">
+            <div class="field" style="margin:0"><label>Phase 1</label><input type="text" id="f-p1" placeholder="〇〜〇歳"></div>
+            <div class="field" style="margin:0"><label>内容</label><input type="text" id="f-p1d" placeholder="このフェーズでやること"></div>
+          </div>
+          <div class="phase-row">
+            <div class="field" style="margin:0"><label>Phase 2</label><input type="text" id="f-p2" placeholder="〇〜〇歳"></div>
+            <div class="field" style="margin:0"><label>内容</label><input type="text" id="f-p2d" placeholder="このフェーズでやること"></div>
+          </div>
+          <div class="phase-row">
+            <div class="field" style="margin:0"><label>Phase 3</label><input type="text" id="f-p3" placeholder="〇〜〇歳"></div>
+            <div class="field" style="margin:0"><label>内容</label><input type="text" id="f-p3d" placeholder="このフェーズでやること"></div>
+          </div>
+          <div class="phase-row">
+            <div class="field" style="margin:0"><label>Phase 4</label><input type="text" id="f-p4" placeholder="〇〜〇歳"></div>
+            <div class="field" style="margin:0"><label>内容</label><input type="text" id="f-p4d" placeholder="このフェーズでやること"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: 計画化 -->
+    <div class="step-panel" data-step="4">
+      <div class="step-header">
+        <div class="step-tag">Step 4 of 5</div>
+        <h2 class="step-title">計画<em>化</em></h2>
+        <p class="step-desc">キャリアの軌跡と、あなたの突破力・強みを言語化します。</p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">キャリアの転換点（主要5つ）</div>
+        <div class="sec-body">
+          <div class="field"><label>転換点 1</label><input type="text" id="f-c1" placeholder="例：2015年　〇〇会社に入社"></div>
+          <div class="field"><label>転換点 2</label><input type="text" id="f-c2" placeholder="例：2018年　独立・起業"></div>
+          <div class="field"><label>転換点 3</label><input type="text" id="f-c3" placeholder="例：2021年　シリーズA調達"></div>
+          <div class="field"><label>転換点 4</label><input type="text" id="f-c4" placeholder="例：2023年　〇〇を達成"></div>
+          <div class="field" style="margin:0"><label>転換点 5</label><input type="text" id="f-c5" placeholder="例：2025年　現在"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">突破力・強み（3つ）</div>
+        <div class="sec-body">
+          <div class="field"><label>強み 1</label><input type="text" id="f-s1" placeholder="例：突破力：壁の前で止まらない"></div>
+          <div class="field"><label>強み 2</label><input type="text" id="f-s2" placeholder="例：共感力：人の気持ちを理解できる"></div>
+          <div class="field" style="margin:0"><label>強み 3</label><input type="text" id="f-s3" placeholder="例：実行力：決めたことをやり切る"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: 日々の実践 -->
+    <div class="step-panel" data-step="5">
+      <div class="step-header">
+        <div class="step-tag">Step 5 of 5</div>
+        <h2 class="step-title">日々の<em>実践</em></h2>
+        <p class="step-desc">設計を毎日の行動に落とし込みます。10の習慣と自己宣言文で完成です。</p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">理想の姿になるための10の習慣</div>
+        <div class="sec-body">
+          <ul class="habit-list">
+            <li class="habit-item"><span class="habit-num">01</span><input type="text" id="f-h1" placeholder="例：早起きをする"></li>
+            <li class="habit-item"><span class="habit-num">02</span><input type="text" id="f-h2" placeholder="例：毎朝・手帳で目標を確認する"></li>
+            <li class="habit-item"><span class="habit-num">03</span><input type="text" id="f-h3" placeholder="例：食事管理・腹八分で食べる"></li>
+            <li class="habit-item"><span class="habit-num">04</span><input type="text" id="f-h4" placeholder="例：毎日運動する"></li>
+            <li class="habit-item"><span class="habit-num">05</span><input type="text" id="f-h5" placeholder="例：家族とコミュニケーションをとる"></li>
+            <li class="habit-item"><span class="habit-num">06</span><input type="text" id="f-h6" placeholder="例：大切な人の良さを見える化する行動をとる"></li>
+            <li class="habit-item"><span class="habit-num">07</span><input type="text" id="f-h7" placeholder="例：仕事を最優先で行動する"></li>
+            <li class="habit-item"><span class="habit-num">08</span><input type="text" id="f-h8" placeholder="例：能力開発の時間をとる"></li>
+            <li class="habit-item"><span class="habit-num">09</span><input type="text" id="f-h9" placeholder="例：休息の時間をとる"></li>
+            <li class="habit-item"><span class="habit-num">10</span><input type="text" id="f-h10" placeholder="例：寝る前に翌日のやることを確認する"></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">自己宣言文</div>
+        <div class="sec-body">
+          <div class="field" style="margin:0">
+            <textarea id="f-declaration" rows="5" placeholder="例：私、〇〇は、〇年〇月〇日までに、〇〇を実現します。"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- app-content -->
+
+  <div class="btn-row">
+    <button class="btn btn-back" id="btnBack" onclick="prevStep()" style="display:none">← 戻る</button>
+    <button class="btn btn-next" id="btnNext" onclick="nextStep()">次へ　→</button>
+    <button class="btn btn-finish" id="btnFinish" onclick="showSummary()" style="display:none">完成　→</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SUMMARY
+═══════════════════════════════════════ -->
+<div id="screen-summary" class="screen">
+  <div class="print-bar">
+    <button class="btn-edit" onclick="backToApp()">← 編集に戻る</button>
+    <button class="btn-pdf" onclick="window.print()">PDF保存 / 印刷</button>
+  </div>
+
+  <div class="summary-wrap">
+    <div class="s-header">
+      <div class="s-tag">Achievement Pyramid　｜　Ant X</div>
+      <div class="s-name" id="s-name">—</div>
+      <div class="s-role-text" id="s-jobRole">—</div>
+      <div class="s-gold-line"></div>
+      <div class="s-purpose" id="s-lifePurpose">—</div>
+    </div>
+
+    <div class="s-grid">
+      <!-- 理念 -->
+      <div class="s-card highlight">
+        <div class="s-card-title">Step 1　人生理念</div>
+        <div id="s-pillars"></div>
+      </div>
+
+      <!-- 欲求 -->
+      <div class="s-card">
+        <div class="s-card-title">Step 2　5つの欲求バランス</div>
+        <div id="s-needs"></div>
+        <div class="s-needs-note" id="s-needs-note"></div>
+      </div>
+
+      <!-- ビジョン -->
+      <div class="s-card s-full">
+        <div class="s-card-title">Step 2　ビジョン</div>
+        <div style="font-size:12px;color:var(--off);line-height:1.8;" id="s-vision"></div>
+      </div>
+
+      <!-- 役割 -->
+      <div class="s-card">
+        <div class="s-card-title">Step 3　私の役割</div>
+        <div id="s-roles"></div>
+      </div>
+
+      <!-- 目標 -->
+      <div class="s-card">
+        <div class="s-card-title">Step 3　数値目標 ／ フェーズ設計</div>
+        <div class="s-goal-box">
+          <div class="s-goal-date" id="s-goalDate"></div>
+          <div class="s-goal-text" id="s-goalContent"></div>
+        </div>
+        <div id="s-phases"></div>
+      </div>
+
+      <!-- キャリア・強み -->
+      <div class="s-card s-full">
+        <div class="s-card-title">Step 4　キャリアの軌跡　／　突破力・強み</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div id="s-careers"></div>
+          <div id="s-strengths"></div>
+        </div>
+      </div>
+
+      <!-- 習慣 -->
+      <div class="s-card s-full">
+        <div class="s-card-title">Step 5　理想の姿になるための10の習慣</div>
+        <div class="s-habits-grid" id="s-habits"></div>
+      </div>
+    </div>
+
+    <!-- 宣言 -->
+    <div class="s-declaration">
+      <div class="s-decl-label">自己宣言文</div>
+      <div class="s-decl-text" id="s-declaration"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     JS
+═══════════════════════════════════════ -->
+<script>
+const TOTAL = 5;
+let cur = 1;
+
+const NEEDS_KEYS  = ['survival','love','power','freedom','fun'];
+const NEEDS_NAMES = ['生存','愛・所属','力・承認','自由','楽しみ'];
+
+const ALL_FIELDS = [
+  'name','jobRole',
+  'pillar1','pillar2','pillar3',
+  'reason1','reason2','reason3',
+  'lifePurpose','vision',
+  'r1t','r1d','r2t','r2d','r3t','r3d',
+  'goalDate','goalContent',
+  'p1','p1d','p2','p2d','p3','p3d','p4','p4d',
+  'c1','c2','c3','c4','c5',
+  's1','s2','s3',
+  'h1','h2','h3','h4','h5','h6','h7','h8','h9','h10',
+  'declaration'
+];
+
+// ─ save / load ─
+function save(){
+  const d={};
+  ALL_FIELDS.forEach(k=>{
+    const el=document.getElementById('f-'+k);
+    if(el) d[k]=el.value;
+  });
+  NEEDS_KEYS.forEach(k=>{
+    const el=document.querySelector(`input[oninput*="'${k}'"]`);
+    if(el) d['need_'+k]=el.value;
+  });
+  localStorage.setItem('antx_ap',JSON.stringify(d));
+}
+
+function load(){
+  const raw=localStorage.getItem('antx_ap');
+  if(!raw) return;
+  const d=JSON.parse(raw);
+  ALL_FIELDS.forEach(k=>{
+    const el=document.getElementById('f-'+k);
+    if(el&&d[k]!==undefined) el.value=d[k];
+  });
+  NEEDS_KEYS.forEach(k=>{
+    const el=document.querySelector(`input[oninput*="'${k}'"]`);
+    if(el&&d['need_'+k]){
+      el.value=d['need_'+k];
+      updateNeed(k,d['need_'+k]);
+    }
+  });
+}
+
+function updateNeed(k,v){
+  document.getElementById('sc-'+k).textContent=v;
+}
+
+// ─ nav ─
+function buildDots(){
+  const labels=['理念','ビジョン','目標','計画','実践'];
+  const nav=document.getElementById('stepDots');
+  nav.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const btn=document.createElement('button');
+    btn.className='step-dot-btn'+(i===cur?' active':i<cur?' done':'');
+    btn.innerHTML=`<div class="sdot">${i}</div><div class="sdot-label">${labels[i-1]}</div>`;
+    if(i<=cur) btn.onclick=()=>goStep(i);
+    nav.appendChild(btn);
+  }
+}
+
+function updateUI(){
+  document.getElementById('progressFill').style.width=((cur-1)/(TOTAL-1)*100)+'%';
+  document.getElementById('stepCounter').textContent=cur+' / '+TOTAL;
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`[data-step="${cur}"]`).classList.add('active');
+  document.getElementById('btnBack').style.display=cur>1?'':'none';
+  document.getElementById('btnNext').style.display=cur<TOTAL?'':'none';
+  document.getElementById('btnFinish').style.display=cur===TOTAL?'':'none';
+  buildDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goStep(n){ save(); cur=n; updateUI(); }
+function nextStep(){ if(cur<TOTAL){save();cur++;updateUI();} }
+function prevStep(){ if(cur>1){save();cur--;updateUI();} }
+
+// ─ welcome → app ─
+function startApp(){
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  load();
+  updateUI();
+}
+
+// ─ show summary ─
+function showSummary(){
+  save();
+  const raw=localStorage.getItem('antx_ap')||'{}';
+  const d=JSON.parse(raw);
+  const v=id=>(d[id]||'').trim();
+
+  document.getElementById('s-name').textContent        = v('name')||'―';
+  document.getElementById('s-jobRole').textContent     = v('jobRole')||'―';
+  document.getElementById('s-lifePurpose').textContent = v('lifePurpose')||'―';
+  document.getElementById('s-vision').textContent      = v('vision')||'―';
+  document.getElementById('s-goalDate').textContent    = v('goalDate')||'―';
+  document.getElementById('s-goalContent').textContent = v('goalContent')||'―';
+  document.getElementById('s-declaration').textContent = v('declaration')||'―';
+
+  // pillars
+  const icons=['第一','第二','第三'];
+  const pids=['pillar1','pillar2','pillar3'];
+  const pellDiv=document.getElementById('s-pillars');
+  pellDiv.innerHTML='';
+  pids.forEach((pid,i)=>{
+    const txt=v(pid); if(!txt) return;
+    const div=document.createElement('div');
+    div.className='s-pillar';
+    div.innerHTML=`<div class="s-pillar-icon">${icons[i]}</div><div class="s-pillar-text">${txt}</div>`;
+    pellDiv.appendChild(div);
+  });
+
+  // needs
+  const needsDiv=document.getElementById('s-needs');
+  needsDiv.innerHTML='';
+  let maxS=0,maxN=[];
+  NEEDS_KEYS.forEach((k,i)=>{
+    const sc=parseInt(d['need_'+k]||3);
+    if(sc>maxS){maxS=sc;maxN=[NEEDS_NAMES[i]];}
+    else if(sc===maxS) maxN.push(NEEDS_NAMES[i]);
+    const row=document.createElement('div');
+    row.className='s-bar-row';
+    row.innerHTML=`<span class="s-bar-label">${NEEDS_NAMES[i]}</span>
+      <div class="s-bar-track"><div class="s-bar-fill" style="width:${sc/5*100}%"></div></div>
+      <span class="s-bar-score">${sc}</span>`;
+    needsDiv.appendChild(row);
+  });
+  document.getElementById('s-needs-note').textContent='最強欲求：'+maxN.join('・');
+
+  // roles
+  const rolesDiv=document.getElementById('s-roles');
+  rolesDiv.innerHTML='';
+  for(let i=1;i<=3;i++){
+    const t=v('r'+i+'t'),desc=v('r'+i+'d');
+    if(!t) continue;
+    const div=document.createElement('div');
+    div.className='s-role';
+    div.innerHTML=`<div class="s-role-bar"></div><div><div class="s-role-title">${t}</div><div class="s-role-desc">${desc}</div></div>`;
+    rolesDiv.appendChild(div);
+  }
+
+  // phases
+  const phasesDiv=document.getElementById('s-phases');
+  phasesDiv.innerHTML='';
+  for(let i=1;i<=4;i++){
+    const ph=v('p'+i),phd=v('p'+i+'d');
+    if(!ph) continue;
+    const div=document.createElement('div');
+    div.className='s-phase';
+    div.innerHTML=`<span class="s-phase-label">P${i}</span><span>${ph}　${phd}</span>`;
+    phasesDiv.appendChild(div);
+  }
+
+  // careers
+  const careersDiv=document.getElementById('s-careers');
+  careersDiv.innerHTML='<div style="font-size:9px;letter-spacing:.2em;color:var(--goldD);text-transform:uppercase;margin-bottom:8px;">キャリアの軌跡</div>';
+  for(let i=1;i<=5;i++){
+    const c=v('c'+i); if(!c) continue;
+    const div=document.createElement('div');
+    div.className='s-item';
+    div.innerHTML=`<span class="s-item-dot">●</span><span>${c}</span>`;
+    careersDiv.appendChild(div);
+  }
+
+  // strengths
+  const strDiv=document.getElementById('s-strengths');
+  strDiv.innerHTML='<div style="font-size:9px;letter-spacing:.2em;color:var(--goldD);text-transform:uppercase;margin-bottom:8px;">突破力・強み</div>';
+  for(let i=1;i<=3;i++){
+    const s=v('s'+i); if(!s) continue;
+    const div=document.createElement('div');
+    div.className='s-item';
+    div.innerHTML=`<span class="s-item-dot">◆</span><span>${s}</span>`;
+    strDiv.appendChild(div);
+  }
+
+  // habits
+  const habitsDiv=document.getElementById('s-habits');
+  habitsDiv.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const h=v('h'+i); if(!h) continue;
+    const div=document.createElement('div');
+    div.className='s-habit';
+    div.innerHTML=`<span class="s-habit-num">${String(i).padStart(2,'0')}</span><span>${h}</span>`;
+    habitsDiv.appendChild(div);
+  }
+
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-summary').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function backToApp(){
+  document.getElementById('screen-summary').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  updateUI();
+}
+
+// init
+load();
+buildDots();
+</script>
+</body>
+</html>
